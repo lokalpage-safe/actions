@@ -299,6 +299,7 @@ jobs:
         DEPENDENCY_GRAPH_REPORT_DIR: '${{ github.workspace }}/custom/report-dir'
 
   custom-report-dir-download-and-submit:
+    needs: custom-report-dir-upload
     runs-on: ubuntu-latest
     steps:
     - name: Checkout sources
