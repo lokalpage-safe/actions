@@ -245,3 +245,37 @@ jobs:
       uses: ./dependency-submission
       with:
         build-root-directory: .github/workflow-samples/groovy-dsl
+
+  custom-report-dir:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ${{fromJSON(inputs.runner-os)}}
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: Checkout sources
+      uses: actions/checkout@v4
+    - name: Initialize integ-test
+      uses: ./.github/actions/init-integ-test
+
+    - name: Generate dependency graph
+      id: dependency-graph
+      uses: ./dependency-submission
+      with:
+        dependency-graph: generate-and-submit
+        build-root-directory: .github/workflow-samples/groovy-dsl
+      env: 
+        DEPENDENCY_GRAPH_REPORT_DIR: custom/report-dir
+    - name: Check generated dependency graphs
+      shell: bash
+      run: |
+        echo "groovy-dsl-again report file: ${{ steps.dependency-graph.outputs.dependency-graph-file }}"
+        ls -l .
+        ls -l custom
+        ls -l custom/report-dir
+        
+        if [ ! -e "${{ steps.dependency-graph.outputs.dependency-graph-file }}" ]; then
+            echo "Did not find dependency graph file"
+            exit 1
+        fi
+        # TODO Check if the file is in the custom directory
