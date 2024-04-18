@@ -188,7 +188,7 @@ async function findDependencyGraphFiles(): Promise<string[]> {
 }
 
 function getReportDirectory(): string {
-    return path.resolve(getWorkspaceDirectory(), 'dependency-graph-reports')
+    return process.env.DEPENDENCY_GRAPH_REPORT_DIR!
 }
 
 function isProcessed(dependencyGraphFile: string): boolean {
