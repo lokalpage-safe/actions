@@ -73,6 +73,11 @@ export async function complete(config: DependencyGraphConfig): Promise<void> {
 }
 
 async function uploadDependencyGraphs(dependencyGraphFiles: string[], config: DependencyGraphConfig): Promise<void> {
+    if (dependencyGraphFiles.length === 0) {
+        core.info('No dependency graph files found to upload.')
+        return
+    }
+
     if (isRunningInActEnvironment()) {
         core.info('Dependency graph upload not supported in the ACT environment.')
         core.info(`Would upload: ${dependencyGraphFiles.join(', ')}`)
@@ -106,6 +111,11 @@ async function downloadAndSubmitDependencyGraphs(config: DependencyGraphConfig):
 }
 
 async function submitDependencyGraphs(dependencyGraphFiles: string[]): Promise<void> {
+    if (dependencyGraphFiles.length === 0) {
+        core.info('No dependency graph files found to submit.')
+        return
+    }
+
     if (isRunningInActEnvironment()) {
         core.info('Dependency graph submit not supported in the ACT environment.')
         core.info(`Would submit: ${dependencyGraphFiles.join(', ')}`)
@@ -162,14 +172,22 @@ async function downloadDependencyGraphs(): Promise<string[]> {
 
     const artifactClient = new DefaultArtifactClient()
 
-    const dependencyGraphArtifacts = (
+    const rawArtifacts = (
         await artifactClient.listArtifacts({
             latest: true,
             findBy
         })
-    ).artifacts.filter(candidate => candidate.name.startsWith(DEPENDENCY_GRAPH_PREFIX))
+    ).artifacts
+
+    core.info(`Found ${rawArtifacts.length} artifacts`)
+    core.info(`rawArtifacts: ${JSON.stringify(rawArtifacts)}`)
+
+    const dependencyGraphArtifacts = rawArtifacts.filter(artifact => artifact.name.startsWith(DEPENDENCY_GRAPH_PREFIX))
+
+    core.info(`Found ${dependencyGraphArtifacts.length} dependency graph artifacts`)
 
     for (const artifact of dependencyGraphArtifacts) {
+        core.info(`Attempting to download dependency-graph artifact ${artifact.name}`)
         const downloadedArtifact = await artifactClient.downloadArtifact(artifact.id, {
             findBy
         })
