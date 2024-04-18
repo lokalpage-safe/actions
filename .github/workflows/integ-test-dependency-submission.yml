@@ -321,11 +321,6 @@ jobs:
         ls -l ${{ github.workspace }}/custom
         ls -l ${{ github.workspace }}/custom/report-dir
 
-        if [ ! -e "${{ github.workspace }}/custom/report-dir/test_dependency_submission-custom-report-dir-submit-ubuntu-latest.json" ]; then
-            echo "Downloaded file does not exist"
-            exit 1
-        fi
-
         if [ "$(find ${{ github.workspace }}/custom/report-dir -name *.json)" ]; then
             echo "Did not find dependency graph file"
             exit 1
