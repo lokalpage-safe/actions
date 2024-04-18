@@ -276,8 +276,7 @@ jobs:
             exit 1
         fi
 
-        # Check if the file name starts with custom directory
-        if [[ ! "${{ steps.dependency-graph.outputs.dependency-graph-file }}" =~ ^${{ github.workspace }}/custom/reports-dir/.* ]]; then
+        if [ "$(dirname ${{ steps.dependency-graph.outputs.dependency-graph-file }})" != "${{ github.workspace }}/custom/report-dir" ]; then
             echo "Dependency graph file is not in the custom directory"
             exit 1
         fi
