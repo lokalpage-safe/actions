@@ -62,19 +62,14 @@ export async function complete(config: DependencyGraphConfig): Promise<void> {
                 return
             case DependencyGraphOption.GenerateAndSubmit:
             case DependencyGraphOption.Clear: // Submit the empty dependency graph
-                await submitDependencyGraphs(await findGeneratedDependencyGraphFiles())
+                await submitDependencyGraphs(await findDependencyGraphFiles())
                 return
             case DependencyGraphOption.GenerateAndUpload:
-                await uploadDependencyGraphs(await findGeneratedDependencyGraphFiles(), config)
+                await uploadDependencyGraphs(await findDependencyGraphFiles(), config)
         }
     } catch (e) {
         warnOrFail(config, option, e)
     }
-}
-
-async function findGeneratedDependencyGraphFiles(): Promise<string[]> {
-    const workspaceDirectory = getWorkspaceDirectory()
-    return await findDependencyGraphFiles(workspaceDirectory)
 }
 
 async function uploadDependencyGraphs(dependencyGraphFiles: string[], config: DependencyGraphConfig): Promise<void> {
@@ -156,8 +151,6 @@ async function submitDependencyGraphFile(jsonFile: string): Promise<void> {
 }
 
 async function downloadDependencyGraphs(): Promise<string[]> {
-    const workspaceDirectory = getWorkspaceDirectory()
-
     const findBy = github.context.payload.workflow_run
         ? {
               token: getGithubToken(),
@@ -168,7 +161,6 @@ async function downloadDependencyGraphs(): Promise<string[]> {
         : undefined
 
     const artifactClient = new DefaultArtifactClient()
-    const downloadPath = path.resolve(workspaceDirectory, 'dependency-graph')
 
     const dependencyGraphArtifacts = (
         await artifactClient.listArtifacts({
@@ -179,21 +171,24 @@ async function downloadDependencyGraphs(): Promise<string[]> {
 
     for (const artifact of dependencyGraphArtifacts) {
         const downloadedArtifact = await artifactClient.downloadArtifact(artifact.id, {
-            path: downloadPath,
             findBy
         })
         core.info(`Downloading dependency-graph artifact ${artifact.name} to ${downloadedArtifact.downloadPath}`)
     }
 
-    return findDependencyGraphFiles(downloadPath)
+    return findDependencyGraphFiles()
 }
 
-async function findDependencyGraphFiles(dir: string): Promise<string[]> {
-    const globber = await glob.create(`${dir}/dependency-graph-reports/*.json`)
+async function findDependencyGraphFiles(): Promise<string[]> {
+    const globber = await glob.create(`${getReportDirectory()}/*.json`)
     const allFiles = await globber.glob()
     const unprocessedFiles = allFiles.filter(file => !isProcessed(file))
     unprocessedFiles.forEach(markProcessed)
     return unprocessedFiles
+}
+
+function getReportDirectory(): string {
+    return path.resolve(getWorkspaceDirectory(), 'dependency-graph-reports')
 }
 
 function isProcessed(dependencyGraphFile: string): boolean {
