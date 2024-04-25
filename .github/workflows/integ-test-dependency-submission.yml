@@ -317,6 +317,10 @@ jobs:
     - name: Check downloaded dependency graph
       shell: bash
       run: |
+        ls -la ${{ github.workspace }}
+        ls -ls ${{ github.workspace }}/custom
+        ls -ls ${{ github.workspace }}/custom/report-dir
+        
         if [ -z "$(ls -A "${{ github.workspace }}/custom/report-dir")" ]; then
           echo "No dependency graph files found in custom directory"
           exit 1
